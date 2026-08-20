@@ -1,0 +1,89 @@
+# Self-hosting the static site (the client-side build) on Kubernetes / k3s.
+#
+#   docker build -f Dockerfile.web -t ghcr.io/cluas/gaexport-web:0.1.0 .
+#   docker push ghcr.io/cluas/gaexport-web:0.1.0
+#   kubectl apply -f deploy/k8s.yaml
+#
+# Replace the image owner and the host below. The pod serves static files only — there
+# is no backend that could ever see a secret.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gaexport
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaexport-web
+  namespace: gaexport
+  labels: { app: gaexport-web }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: gaexport-web }
+  template:
+    metadata:
+      labels: { app: gaexport-web }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: web
+          image: ghcr.io/cluas/gaexport-web:0.1.0
+          ports:
+            - { name: http, containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /index.html, port: http }
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet: { path: /index.html, port: http }
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 10m, memory: 24Mi }
+            limits: { cpu: 200m, memory: 96Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: cache, mountPath: /var/cache/nginx }
+            - { name: run, mountPath: /tmp }
+      volumes:
+        - { name: cache, emptyDir: {} }
+        - { name: run, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gaexport-web
+  namespace: gaexport
+spec:
+  selector: { app: gaexport-web }
+  ports:
+    - { name: http, port: 80, targetPort: http }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gaexport-web
+  namespace: gaexport
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [gaexport.example.com]
+      secretName: gaexport-web-tls
+  rules:
+    - host: gaexport.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gaexport-web
+                port: { name: http }

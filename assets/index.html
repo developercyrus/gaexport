@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>gaexport · Google Authenticator 密钥导出</title>
+<link rel="stylesheet" href="app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cg fill='%2337d9a4'%3E%3Crect x='6' y='6' width='7' height='7' rx='1.5'/%3E%3Crect x='19' y='6' width='7' height='7' rx='1.5'/%3E%3Crect x='6' y='19' width='7' height='7' rx='1.5'/%3E%3Crect x='19' y='19' width='3' height='3'/%3E%3Crect x='23' y='23' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E">
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M9 9V5.5A1.5 1.5 0 0 1 10.5 4h8A1.5 1.5 0 0 1 20 5.5v8a1.5 1.5 0 0 1-1.5 1.5H15M4 10.5A1.5 1.5 0 0 1 5.5 9h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 18.5z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12S18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M4 4l16 16M9.9 5.9A9.9 9.9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 8.1A17 17 0 0 0 2.5 12S6 18.5 12 18.5c.8 0 1.5-.1 2.2-.3"/><path d="M9.8 9.8a3 3 0 0 0 4.3 4.3"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5h-2.5zM18.5 18.5H21V21h-2.5z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v10m0 0 4-4m-4 4-4-4M4.5 17.5v1A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-1"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V4.5h10V8M7 17H5.5A1.5 1.5 0 0 1 4 15.5v-6A1.5 1.5 0 0 1 5.5 8h13A1.5 1.5 0 0 1 20 9.5v6a1.5 1.5 0 0 1-1.5 1.5H17"/><path d="M7 13.5h10v6H7z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.5-4.5L13 17m0 0 3.5-3.5L20 17"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.5v6c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M9 20h6M12 16.5V20"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M16.5 4.5l3 3L8 19l-3.5.5.5-3.5z"/><path d="M14.5 6.5l3 3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2L9 4.5h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5S14.2 18.2 12 20.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+  <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 9a8 8 0 0 1 13.5-3.5L20 8M20 15a8 8 0 0 1-13.5 3.5L4 16"/><path d="M20 4.5V8h-3.5M4 19.5V16h3.5"/></symbol>
+</svg>
+
+<div class="ambient" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </span>
+      <span class="brand-text">
+        <strong>gaexport</strong>
+        <small data-i18n="brand.tagline">Google Authenticator 密钥导出</small>
+      </span>
+    </a>
+    <div class="topbar-actions">
+      <span class="pill pill-safe" id="privacy-pill" title="">
+        <svg class="ic"><use href="#i-shield"></use></svg>
+        <span data-i18n="pill.local">本地解析</span>
+      </span>
+      <div class="menu lang-menu" id="lang-menu">
+        <button class="lang-btn" id="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          <svg class="ic" aria-hidden="true"><use href="#i-globe"></use></svg>
+          <span id="lang-current">简体中文</span>
+          <svg class="ic lang-chev" aria-hidden="true"><use href="#i-chevron"></use></svg>
+        </button>
+        <div class="menu-list lang-list" id="lang-list" role="menu" hidden></div>
+      </div>
+      <button class="icon-btn theme-btn" id="theme-toggle" type="button" aria-live="polite">
+        <svg class="ic ic-auto"><use href="#i-monitor"></use></svg>
+        <svg class="ic ic-sun"><use href="#i-sun"></use></svg>
+        <svg class="ic ic-moon"><use href="#i-moon"></use></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ── intake ─────────────────────────────────────────────── -->
+  <section id="intake" class="intake">
+    <h1 class="hero-title" data-i18n="hero.title">把导出二维码变成可用的 2FA 密钥</h1>
+    <p class="hero-sub" data-i18n="hero.sub">在 Google Authenticator 里点「转移账号 → 导出账号」，截图或拍下二维码，然后拖到这里。</p>
+
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-describedby="drop-hint">
+      <input type="file" id="file-input" accept="image/*" multiple hidden>
+      <svg class="drop-ic"><use href="#i-image"></use></svg>
+      <p class="drop-title" data-i18n="drop.title">拖入二维码截图</p>
+      <p class="drop-sub" id="drop-hint" data-i18n="drop.sub">或点击选择文件 · 粘贴 ⌘V · 手机可直接拍照</p>
+      <div class="drop-actions">
+        <button class="btn btn-primary" id="pick-file" type="button" data-i18n="drop.pick">选择图片</button>
+        <button class="btn btn-ghost" id="scan-btn" type="button" hidden>
+          <svg class="ic"><use href="#i-camera"></use></svg>
+          <span data-i18n="drop.scan">摄像头扫描</span>
+        </button>
+        <button class="btn btn-ghost" id="pick-camera" type="button" data-i18n="drop.camera">拍照</button>
+        <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+      </div>
+    </div>
+
+    <details class="paste" id="paste-block">
+      <summary data-i18n="paste.summary">或直接粘贴 URI / base64 数据</summary>
+      <textarea id="paste-text" rows="4" spellcheck="false" autocomplete="off"
+        data-i18n-ph="paste.placeholder"
+        placeholder="otpauth-migration://offline?data=…&#10;otpauth://totp/ACME:alice?secret=…"></textarea>
+      <div class="paste-actions">
+        <button class="btn btn-primary" id="paste-go" type="button" data-i18n="paste.go">解析</button>
+        <span class="hint" data-i18n="paste.hint">支持多行、混在日志里的 URI，以及裸 base64 payload</span>
+      </div>
+    </details>
+
+    <section class="guide">
+      <h2 class="guide-title" data-i18n="guide.title">怎么拿到导出二维码？</h2>
+      <ol class="steps">
+        <li>
+          <span class="step-n">1</span>
+          <b data-i18n="guide.s1t">打开手机上的 Google Authenticator</b>
+          <span data-i18n="guide.s1b">点右上角头像（或 ⋮）→「转移账号 / Transfer accounts」</span>
+        </li>
+        <li>
+          <span class="step-n">2</span>
+          <b data-i18n="guide.s2t">选「导出账号 / Export accounts」</b>
+          <span data-i18n="guide.s2b">按提示验证指纹或面容，勾选要导出的账号，点下一步</span>
+        </li>
+        <li>
+          <span class="step-n">3</span>
+          <b data-i18n="guide.s3t">把二维码交给这个页面</b>
+          <span data-i18n="guide.s3b">手机截图后拖进来，或点「摄像头扫描」直接对着手机屏幕扫</span>
+        </li>
+      </ol>
+      <p class="guide-note" data-i18n="guide.note">账号多时 GA 会拆成多张二维码（可左右滑动），逐张扫或逐张上传即可，本页会自动合并并去重。导出不会删掉手机上的账号。</p>
+    </section>
+
+    <p class="intake-note">
+      <svg class="ic"><use href="#i-shield"></use></svg>
+      <span id="privacy-note" data-i18n="note.local">解析在本机进程内完成，不落盘、不写日志、不外发。</span>
+    </p>
+  </section>
+
+  <!-- ── busy ───────────────────────────────────────────────── -->
+  <div id="busy" class="busy" hidden>
+    <span class="spinner"></span>
+    <span data-i18n="busy.text">正在识别二维码…</span>
+  </div>
+
+  <!-- ── problems ───────────────────────────────────────────── -->
+  <section id="problems" class="problems" hidden>
+    <h2 class="problems-title"><span data-i18n="problems.title">需要注意</span></h2>
+    <ul id="problems-list"></ul>
+  </section>
+
+  <!-- ── results ────────────────────────────────────────────── -->
+  <section id="results" class="results" hidden>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <label class="check-all" id="select-all-box">
+          <input type="checkbox" id="select-all" checked>
+          <span class="count-chip" id="count-chip">0</span>
+        </label>
+        <label class="search">
+          <svg class="ic"><use href="#i-search"></use></svg>
+          <input type="search" id="search" autocomplete="off" spellcheck="false"
+            data-i18n-ph="toolbar.search" placeholder="搜索发行方或账号  ( / )">
+        </label>
+      </div>
+      <div class="toolbar-right">
+        <span class="picker">
+          <select id="sort" aria-label="sort">
+            <option value="original" data-i18n="sort.original">原始顺序</option>
+            <option value="issuer" data-i18n="sort.issuer">按发行方</option>
+            <option value="name" data-i18n="sort.name">按账号</option>
+          </select>
+          <svg class="ic picker-chev" aria-hidden="true"><use href="#i-chevron"></use></svg>
+        </span>
+        <button class="btn btn-ghost" id="add-entry" type="button">
+          <svg class="ic"><use href="#i-plus"></use></svg>
+          <span data-i18n="toolbar.add">手动添加</span>
+        </button>
+        <button class="btn btn-ghost" id="reveal-all" type="button" aria-pressed="false">
+          <svg class="ic"><use href="#i-eye"></use></svg>
+          <span data-i18n="toolbar.reveal">显示密钥</span>
+        </button>
+        <div class="menu" id="export-menu">
+          <button class="btn btn-ghost" id="export-btn" type="button" aria-expanded="false">
+            <svg class="ic"><use href="#i-download"></use></svg>
+            <span data-i18n="toolbar.export">导出</span>
+          </button>
+          <div class="menu-list" hidden>
+            <button type="button" data-export="uri"><b>otpauth URI</b><small data-i18n="export.uri">纯文本，任何 2FA 应用都能吃</small></button>
+            <button type="button" data-export="json"><b>JSON</b><small data-i18n="export.json">结构化，含 issuer/algo/digits</small></button>
+            <button type="button" data-export="csv"><b>CSV</b><small data-i18n="export.csv">表格，可导入密码管理器</small></button>
+            <button type="button" data-export="aegis"><b>Aegis JSON</b><small data-i18n="export.aegis">Aegis Authenticator 直接导入</small></button>
+            <button type="button" data-export="ga"><b data-i18n="export.ga.title">Google Authenticator 二维码</b><small data-i18n="export.ga">重新打包成导出码，换机直接扫</small></button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="print-btn" type="button">
+          <svg class="ic"><use href="#i-print"></use></svg>
+          <span data-i18n="toolbar.print">打印备份</span>
+        </button>
+        <button class="btn btn-danger-ghost" id="clear-btn" type="button">
+          <svg class="ic"><use href="#i-trash"></use></svg>
+          <span data-i18n="toolbar.clear">清空</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <p class="empty-filter" id="empty-filter" hidden data-i18n="filter.empty">没有匹配的账号</p>
+
+    <div class="add-more">
+      <button class="btn btn-ghost" id="add-more" type="button">
+        <svg class="ic"><use href="#i-plus"></use></svg>
+        <span data-i18n="results.addmore">再加一张二维码</span>
+      </button>
+      <span class="hint" data-i18n="results.batchhint">导出被拆成多张码时，逐张加进来会自动合并去重。</span>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap footer">
+  <p class="footer-warn" data-i18n="footer.warn">⚠️ 这些密钥等价于你的 2FA 令牌本身：拿到就能永久生成验证码。请存进密码管理器，别留在下载目录、聊天记录或截图里。</p>
+  <p class="footer-meta">
+    <span>gaexport</span><span aria-hidden="true">·</span>
+    <span data-i18n="footer.offline">离线运行 · 无遥测</span><span aria-hidden="true">·</span>
+    <span data-i18n="footer.license">MIT / Apache-2.0</span>
+  </p>
+</footer>
+
+<!-- ── QR modal ─────────────────────────────────────────────── -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="icon-btn modal-close" id="modal-close" type="button" aria-label="close">
+      <svg class="ic"><use href="#i-close"></use></svg>
+    </button>
+    <h3 id="modal-title"></h3>
+    <p id="modal-sub" class="modal-sub"></p>
+    <div class="modal-qr" id="modal-qr"></div>
+    <p class="modal-hint" data-i18n="modal.hint">在新设备的验证器里选「扫描二维码」。</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-download" type="button">
+        <svg class="ic"><use href="#i-download"></use></svg>
+        <span data-i18n="modal.download">下载 PNG</span>
+      </button>
+      <button class="btn btn-ghost" id="modal-copy-uri" type="button">
+        <svg class="ic"><use href="#i-copy"></use></svg>
+        <span data-i18n="modal.copyuri">复制 URI</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="scanner" class="scanner" hidden>
+  <div class="scanner-stage">
+    <video id="scanner-video" playsinline muted autoplay></video>
+    <div class="viewfinder" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <p class="scanner-hint" id="scanner-hint" data-i18n="scan.hint">把导出二维码放进取景框</p>
+  <div class="scanner-actions">
+    <button class="btn btn-ghost" id="scanner-flip" type="button">
+      <svg class="ic"><use href="#i-flip"></use></svg>
+      <span data-i18n="scan.flip">切换摄像头</span>
+    </button>
+    <button class="btn btn-primary" id="scanner-stop" type="button" data-i18n="scan.stop">完成</button>
+  </div>
+</div>
+
+<div id="edit-modal" class="modal" hidden>
+  <form class="modal-card edit-card" id="edit-form" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <button class="icon-btn modal-close" id="edit-close" type="button" aria-label="close">
+      <svg class="ic"><use href="#i-close"></use></svg>
+    </button>
+    <h3 id="edit-title" data-i18n="edit.title">编辑账号</h3>
+
+    <div class="field-grid">
+      <label class="field">
+        <span data-i18n="edit.issuer">发行方</span>
+        <input id="edit-issuer" type="text" autocomplete="off" spellcheck="false" placeholder="GitHub">
+      </label>
+      <label class="field">
+        <span data-i18n="edit.account">账号</span>
+        <input id="edit-name" type="text" autocomplete="off" spellcheck="false" placeholder="alice@example.com">
+      </label>
+      <label class="field field-wide">
+        <span data-i18n="edit.secret">密钥 (base32)</span>
+        <input id="edit-secret" type="text" autocomplete="off" spellcheck="false"
+               class="mono" placeholder="JBSWY3DPEHPK3PXP">
+        <small data-i18n="edit.secretHint">大小写、空格、短横线和 = 填充都可以，会自动规范化</small>
+      </label>
+      <label class="field">
+        <span data-i18n="edit.type">类型</span>
+        <span class="picker">
+          <select id="edit-type">
+            <option value="totp">TOTP</option>
+            <option value="hotp">HOTP</option>
+          </select>
+          <svg class="ic picker-chev" aria-hidden="true"><use href="#i-chevron"></use></svg>
+        </span>
+      </label>
+      <label class="field">
+        <span data-i18n="edit.algorithm">算法</span>
+        <span class="picker">
+          <select id="edit-algorithm">
+            <option value="SHA1">SHA1</option>
+            <option value="SHA256">SHA256</option>
+            <option value="SHA512">SHA512</option>
+            <option value="MD5">MD5</option>
+          </select>
+          <svg class="ic picker-chev" aria-hidden="true"><use href="#i-chevron"></use></svg>
+        </span>
+      </label>
+      <label class="field">
+        <span data-i18n="edit.digits">位数</span>
+        <input id="edit-digits" type="number" min="1" max="10" step="1" inputmode="numeric">
+      </label>
+      <label class="field" id="edit-period-field">
+        <span data-i18n="edit.period">周期 (秒)</span>
+        <input id="edit-period" type="number" min="1" max="3600" step="1" inputmode="numeric">
+      </label>
+      <label class="field" id="edit-counter-field" hidden>
+        <span data-i18n="edit.counter">计数器</span>
+        <input id="edit-counter" type="number" min="0" step="1" inputmode="numeric">
+      </label>
+    </div>
+
+    <p class="edit-error" id="edit-error" hidden></p>
+
+    <div class="modal-actions edit-actions">
+      <button class="btn btn-danger-ghost" id="edit-delete" type="button">
+        <svg class="ic"><use href="#i-trash"></use></svg>
+        <span data-i18n="edit.delete">删除</span>
+      </button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" id="edit-cancel" type="button" data-i18n="edit.cancel">取消</button>
+      <button class="btn btn-primary" id="edit-save" type="submit" data-i18n="edit.save">保存</button>
+    </div>
+  </form>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="print-sheet" class="print-sheet" aria-hidden="true"></div>
+
+<!-- ── card template ────────────────────────────────────────── -->
+<template id="card-tpl">
+  <article class="card">
+    <header class="card-head">
+      <label class="card-pick">
+        <input type="checkbox" data-action="pick" checked>
+      </label>
+      <span class="avatar" data-role="avatar"></span>
+      <span class="card-id">
+        <b class="issuer" data-role="issuer"></b>
+        <span class="account" data-role="account"></span>
+      </span>
+      <span class="badges" data-role="badges"></span>
+    </header>
+
+    <div class="code-row">
+      <button class="code" type="button" data-role="code" data-action="copy-code" title="">
+        <span data-role="code-text">••• •••</span>
+      </button>
+      <div class="ttl" data-role="ttl">
+        <svg viewBox="0 0 40 40" class="ring" aria-hidden="true">
+          <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+          <circle class="ring-fg" cx="20" cy="20" r="16" data-role="ring"></circle>
+        </svg>
+        <span class="ttl-num" data-role="ttl-num"></span>
+      </div>
+    </div>
+
+    <div class="secret-row">
+      <code class="secret" data-role="secret">•••• •••• •••• ••••</code>
+      <span class="secret-actions">
+        <button class="icon-btn" type="button" data-action="toggle-secret" title="">
+          <svg class="ic ic-show"><use href="#i-eye"></use></svg>
+          <svg class="ic ic-hide"><use href="#i-eye-off"></use></svg>
+        </button>
+        <button class="icon-btn" type="button" data-action="copy-secret" title="">
+          <svg class="ic"><use href="#i-copy"></use></svg>
+        </button>
+        <button class="icon-btn" type="button" data-action="edit" title="">
+          <svg class="ic"><use href="#i-edit"></use></svg>
+        </button>
+        <button class="icon-btn" type="button" data-action="show-qr" title="">
+          <svg class="ic"><use href="#i-qr"></use></svg>
+        </button>
+      </span>
+    </div>
+  </article>
+</template>
+
+<script src="i18n.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

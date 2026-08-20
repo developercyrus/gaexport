@@ -1,0 +1,12 @@
+/target
+/dist
+/.playwright-mcp
+*.profraw
+
+# The Pages custom domain belongs to whoever deploys, not to the source tree.
+web/CNAME
+
+# Never commit anything that could hold a real export.
+*.otpauth
+export*.png
+qrcodes/

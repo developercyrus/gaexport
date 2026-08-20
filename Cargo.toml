@@ -1,0 +1,92 @@
+[package]
+name = "gaexport"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Export, inspect and re-import Google Authenticator OTP secrets (otpauth-migration) — CLI + local HTTP server"
+authors = ["gaexport contributors"]
+license = "MIT"
+repository = "https://github.com/Cluas/gaexport"
+keywords = ["totp", "otp", "2fa", "google-authenticator", "qrcode"]
+categories = ["command-line-utilities", "cryptography"]
+readme = "README.md"
+
+[lib]
+name = "gaexport"
+path = "src/lib.rs"
+# `cdylib` is what the wasm32 build needs; the plain `lib` keeps `cargo test`
+# and downstream crates working.
+crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "gaexport"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[dependencies]
+# --- core (always) ---
+anyhow = "1"
+# --- cli (the binary) ---
+clap = { version = "4", features = ["derive", "wrap_help", "env"], optional = true }
+clap_complete = { version = "4", optional = true }
+data-encoding = "2"
+percent-encoding = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+csv = "1"
+zeroize = "1"
+qrcode = { version = "0.14", default-features = false }
+hmac = "0.12"
+sha1 = "0.10"
+sha2 = "0.10"
+md-5 = "0.10"
+
+# --- qr-decode (reading QR screenshots/photos) ---
+rqrr = { version = "0.10", optional = true }
+# Formats every platform's screenshot tool and camera actually produces.
+image = { version = "0.25", default-features = false, optional = true, features = [
+    "png", "jpeg", "gif", "webp",
+] }
+
+# --- server ---
+axum = { version = "0.8", features = ["multipart"], optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "net"], optional = true }
+# Only the server needs randomness (its access token); everything else is
+# deterministic, which also keeps the wasm build free of a getrandom backend.
+uuid = { version = "1", features = ["v4"], optional = true }
+
+# --- wasm (the fully client-side build behind the hosted page) ---
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+
+[features]
+default = ["cli", "qr-decode", "server", "image-extra"]
+# The command-line binary. Off for the wasm build, which keeps clap out of it.
+cli = ["clap", "clap_complete"]
+# Raster (PNG) QR output.
+image-io = ["image"]
+# Additional decoders worth having on a desktop, skipped in the wasm bundle.
+image-extra = ["image/bmp", "image/tiff", "image/ico", "image/tga", "image/pnm"]
+# Reading QR codes out of screenshots and photos.
+qr-decode = ["rqrr", "image-io"]
+# The local HTTP server and its browser UI.
+server = ["axum", "tokio", "uuid", "cli"]
+# Client-side build: same decoder, compiled to WebAssembly.
+wasm = ["qr-decode", "wasm-bindgen", "js-sys"]
+
+# wasm-pack ships an older wasm-opt than the features rustc emits by default,
+# so spell the required proposals out instead of turning optimisation off.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-O",
+    "--enable-bulk-memory",
+    "--enable-nontrapping-float-to-int",
+    "--enable-sign-ext",
+    "--enable-mutable-globals",
+    "--enable-reference-types",
+]
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1

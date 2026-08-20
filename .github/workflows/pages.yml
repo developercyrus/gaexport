@@ -1,0 +1,50 @@
+# Publishes the fully client-side build to GitHub Pages.
+#
+# The hosted page is static on purpose: the decoder is WebAssembly running in
+# the visitor's browser, so no server — including this one — can see a secret.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - run: ./scripts/build-web.sh dist
+        env:
+          # Optional: set a repository variable named PAGES_CNAME to serve the
+          # site from your own domain. Unset is fine — Pages then uses
+          # <user>.github.io/<repo>.
+          PAGES_CNAME: ${{ vars.PAGES_CNAME }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

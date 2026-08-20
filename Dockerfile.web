@@ -1,0 +1,15 @@
+# The static, fully client-side site: WebAssembly decoder + UI, served by nginx.
+#
+# Nothing reaches the server: the page decodes QR codes and computes OTP codes
+# in the visitor's browser. This is the image to deploy if you want to host
+# gaexport for other people.
+FROM rust:1-bookworm AS build
+RUN cargo install wasm-pack --locked
+WORKDIR /src
+COPY . .
+RUN ./scripts/build-web.sh /out
+
+FROM nginxinc/nginx-unprivileged:1-alpine
+COPY --from=build /out /usr/share/nginx/html
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 8080
