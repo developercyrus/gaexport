@@ -13,6 +13,8 @@ It also goes the other way: hand it a pile of `otpauth://` URIs and it will pack
 them into Google Authenticator's own export QR codes so you can scan them into a
 fresh install.
 
+![Decoded accounts as cards with live codes, masked secrets and per-account editing](docs/screenshot.png)
+
 Three ways to use it, same Rust core underneath:
 
 | | | |
