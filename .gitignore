@@ -2,6 +2,7 @@
 /dist
 /.playwright-mcp
 *.profraw
+.env
 
 # The Pages custom domain belongs to whoever deploys, not to the source tree.
 web/CNAME

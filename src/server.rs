@@ -177,6 +177,7 @@ async fn serve(
     Ok(())
 }
 
+
 /// Token check plus idle-timer bookkeeping.
 async fn gate(
     State(state): State<Arc<AppState>>,
@@ -184,36 +185,89 @@ async fn gate(
     next: axum::middleware::Next,
 ) -> Response {
     state.last_activity.store(now_unix(), Ordering::Relaxed);
+
     let path = request.uri().path();
+
     if path == "/healthz" || state.token.is_none() {
         return next.run(request).await;
     }
+
     let expected = state.token.as_deref().unwrap_or_default();
-    let presented = request
+
+    // 1. Read token from the request header.
+    let header_token = request
         .headers()
         .get(TOKEN_HEADER)
         .and_then(|v| v.to_str().ok())
-        .map(str::to_string)
-        .or_else(|| {
-            request.uri().query().and_then(|q| {
-                q.split('&').find_map(|pair| {
-                    let (k, v) = pair.split_once('=')?;
-                    (k == "token").then(|| v.to_string())
-                })
-            })
+        .map(str::to_string);
+
+    // 2. Read token from the initial URL.
+    let query_token = request.uri().query().and_then(|q| {
+        q.split('&').find_map(|pair| {
+            let (k, v) = pair.split_once('=')?;
+            (k == "token").then(|| v.to_string())
         })
+    });
+
+    // 3. Read token from the HttpOnly cookie.
+    let cookie_token = request
+        .headers()
+        .get(header::COOKIE)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|cookies| {
+            cookies.split(';').find_map(|part| {
+                let (name, value) = part.trim().split_once('=')?;
+                (name == "__Host-gaexport").then(|| value.to_string())
+            })
+        });
+
+    let presented = header_token
+        .or_else(|| query_token.clone())
+        .or(cookie_token)
         .unwrap_or_default();
 
-    if constant_time_eq(presented.as_bytes(), expected.as_bytes()) {
-        next.run(request).await
-    } else {
-        (
+    if !constant_time_eq(presented.as_bytes(), expected.as_bytes()) {
+        return (
             StatusCode::UNAUTHORIZED,
-            "missing or wrong token — open the URL printed by `gaexport serve`\n",
+            "missing or wrong token\n",
         )
-            .into_response()
+            .into_response();
     }
+
+    // 4. Valid URL token: establish a session cookie and
+    //    redirect to remove the token from the browser URL.
+    if path == "/" && query_token.as_deref() == Some(expected) {
+        let cookie = format!(
+            "__Host-gaexport={expected}; Path=/; HttpOnly; SameSite=Strict; Secure"
+        );
+
+        let cookie = match header::HeaderValue::from_str(&cookie) {
+            Ok(value) => value,
+            Err(_) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "could not create authentication cookie\n",
+                )
+                    .into_response();
+            }
+        };
+
+        let mut headers = no_store();
+
+        headers.insert(
+            header::LOCATION,
+            header::HeaderValue::from_static("/"),
+        );
+
+        headers.insert(header::SET_COOKIE, cookie);
+
+        return (StatusCode::SEE_OTHER, headers).into_response();
+    }
+
+    next.run(request).await
 }
+
+
 
 fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
